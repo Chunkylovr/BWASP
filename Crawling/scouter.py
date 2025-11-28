@@ -1,7 +1,7 @@
 from seleniumwire import webdriver
 from multiprocessing import Process, Manager
 from urllib.parse import urlparse, urljoin
-from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 import re, json
 
 from Crawling import analyst
@@ -77,7 +77,7 @@ def analysis(input_url, req_res_packets, cur_page_links, options, cookie_result,
     # {"id": "[1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]"}     
     if len(LOAD_PACKET_INDEXES) < recent_packet_count:
         #수정 후 LOAD_PACKET_INDEXES = json.loads(Packets().GetAutomationIndex()["retData"])["id"]
-        LOAD_PACKET_INDEXES = json.loads(Packets().GetAutomationIndex()["retData"]["id"])
+        LOAD_PACKET_INDEXES = json.loads(Packets().GetAutomationIndex()["retData"])
 
     packet_indexes = LOAD_PACKET_INDEXES[previous_packet_count : recent_packet_count]
     #analyst_result = analyst.start(sysinfo_detectlist,input_url, req_res_packets, cur_page_links, packet_indexes,options['info'])
@@ -245,18 +245,20 @@ def isOpenRedirection(visit_url, current_url, target_url):
 
 
 def initSelenium():
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("lang=ko_KR")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_experimental_option("prefs", {
-        "download_restrictions": 3
-    })
+    firefox_options = webdriver.FirefoxOptions()
+    firefox_options.add_argument("lang=ko_KR")
+    firefox_options.add_argument("--headless")
+    firefox_options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", False)
+    firefox_options.set_preference("dom.webnotifications.enabled", False)
+    firefox_options.set_preference("media.volume_scale", "0.0")
+
+
     # https://github.com/wkeeling/selenium-wire#in-memory-storage
     options = {
         "disable_encoding": True,
         'request_storage': 'memory'
     }
 
-    driver = webdriver.Chrome(ChromeDriverManager().install(), seleniumwire_options=options, chrome_options=chrome_options)
+    driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), seleniumwire_options=options, options=firefox_options)
 
     return driver
